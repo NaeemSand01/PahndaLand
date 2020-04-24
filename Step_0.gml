@@ -1,73 +1,82 @@
+// MOVE THROUGH MENU
 
-// GET HORIZONTAL AND VERTICAL MOVEMENT
-hInput = keyboard_check(vk_right) - keyboard_check(vk_left);
-vInput = keyboard_check(vk_down) - keyboard_check(vk_up);
-shiftInput = keyboard_check(vk_shift);
+if (!global.pause) exit;
+
+inputUp_p = Kcp(global.key_up);
+inputDown_p = Kcp(global.key_down);
+inputEnter_p = Kcp(global.key_enter);
+//inputRev_p = Kcp(global.key_revert);
 
 
-if (shiftInput) {
-	spd = u_spd;
+var ds_grid = menu_pages[page], ds_height = ds_grid_height(ds_grid)
+
+
+if (isInputting) {
+	switch(ds_grid[# 1, menu_option[page]]) {
+		case menu_el_type.shift: 
+				var hInput = Kcp(global.key_right) - Kcp(global.key_left);
+				if (hInput != 0) {
+					//Audio effect
+					ds_grid[# 3, menu_option[page]] += hInput;
+					ds_grid[# 3, menu_option[page]] = clamp(ds_grid[# 3, menu_option[page]], 0, array_length_1d(ds_grid[# 4, menu_option[page]]) - 1);
+				}
+			break;
+		case menu_el_type.slider:
+				switch(menu_option[page]) {
+					//case 0: if(!audio_is_playing(music_test)) { audio_play_sound(music_test, 5, false); } break;
+					case 0: if(!audio_is_playing(text_sound)) { audio_play_sound(text_sound, 5, false); } break;
+					case 1: if(!audio_is_playing(music)) { audio_play_sound(music, 5, false); } break;
+				}
+		
+				var hInput = keyboard_check(global.key_right) - keyboard_check(global.key_left);
+				if (hInput != 0) {
+					//Audio effect
+					ds_grid[# 3, menu_option[page]] += hInput * 0.01;
+					ds_grid[# 3, menu_option[page]] = clamp(ds_grid[# 3, menu_option[page]], 0, 1);
+					script_execute(ds_grid[# 2, menu_option[page]], ds_grid[# 3, menu_option[page]]);
+				}
+			break;
+		case menu_el_type.toggle:
+				var hInput = Kcp(global.key_right) - Kcp(global.key_left);
+				if (hInput != 0) {
+					//Audio effect
+					ds_grid[# 3, menu_option[page]] += hInput;
+					ds_grid[# 3, menu_option[page]] = clamp(ds_grid[# 3, menu_option[page]], 0, 1);
+				}
+			break;
+		case menu_el_type.input:
+				var bb = keyboard_lastkey;
+				if (bb != vk_enter) {
+					if (bb != ds_grid[# 3, menu_option[page]]) //audio
+					ds_grid[# 3, menu_option[page]] = bb;
+					variable_global_set(ds_grid[# 2, menu_option[page]], bb);
+				}
+			break;
+	}
+
 } else {
-	spd = 4.5;
-	
+	var oChange = inputDown_p - inputUp_p;
+	if(oChange != 0) {
+		menu_option[page] += oChange;
+		audio_play_sound(text_sound, 5, false)
+		if(menu_option[page] > ds_height -1) { menu_option[page] = 0; }
+		if (menu_option[page] < 0) { menu_option[page] = ds_height - 1;	}
+	}
+
 }
 
-moveX = 0;
-moveY = 0;
 
-// MOVE CHARACTER ON KEY PRESS
-if (hInput != 0 or vInput != 0) {
-	dir = point_direction(0, 0, hInput, vInput)
-	moveX = lengthdir_x(spd, dir);
-	moveY = lengthdir_y(spd, dir);
-
-
-
-// COLLISION CHECK
-
-	//HORIZONTAL
-	var collisionH = instance_place(x + moveX, y, Solid_Obj)
-	show_debug_message(collisionH)
-	if (collisionH != noone and collisionH.collidable) {
-		show_debug_message(collisionH)
-		repeat(abs(moveX)) {
-			if (!place_meeting(x+sign(moveX), y, Solid_Obj)) { x += sign(moveX); } 
-			else { break;}}	moveX = 0; }
-	
-	
-	//VERTICAL
-	var collisionV = instance_place(x , y + moveY, Solid_Obj)
-	if (collisionV != noone and collisionV.collidable) {
-		repeat(abs(moveY)) {
-			if (!place_meeting(x, y +sign(moveX), Solid_Obj)) { y += sign(moveY); } 
-			else { break;}}	moveY = 0; }
-
-
-	// APPLY MOVEMENT
-	x += moveX;
-	y += moveY;
-	
-	// SET SPRITE ACCORDING TO DIRECTION
-	switch(dir) {
-		case 0:		pahnRight = true; pahnBack = false;  pahnLeft = false; pahnFront = false; break;
-		case 90:	pahnBack = true; pahnRight = false; pahnLeft = false; pahnFront = false;  break;
-		case 180:	pahnLeft = true; pahnBack = false;  pahnRight = false;  pahnFront = false; break;
-		case 270:	pahnFront = true; pahnRight = false; pahnBack = false;  pahnLeft = false; break;
+if (inputEnter_p) {
+	switch(ds_grid[# 1, menu_option[page]]) {
+		case menu_el_type.script_runner: script_execute(ds_grid[# 2, menu_option[page]]); break;
+		case menu_el_type.page_transfer: page = ds_grid[# 2, menu_option[page]] break;
+		case menu_el_type.shift:
+		case menu_el_type.slider:
+		case menu_el_type.toggle: if(isInputting) { script_execute( ds_grid[# 2, menu_option[page]], ds_grid[# 3, menu_option[page]]); }
+		case menu_el_type.input:
+		isInputting = !isInputting;
+			break;
 	}
 	
-} else {
-	
-	// SET SPRITE TO FIRST INDEX OF IDLE EACH DIRECTION
-	if (sprite_index = PahnW_Front and moveX == 0 and moveY == 0) {
-		sprite_index = PahnIID_Front;
-	} else if (sprite_index = PahnW_Right and moveX == 0 and moveY == 0) {
-		sprite_index = PahnID_Right;
-	} else if (sprite_index = PahnW_Left and moveX == 0 and moveY == 0) {
-		sprite_index = PahnID_Left;
-	} else if (sprite_index = PahnW_Back and moveX == 0 and moveY == 0) {
-		sprite_index = PahnID_Back;
-	} else {
-		image_index = 0;
-	}
-
+	audio_play_sound(text_sound, 5, false);
 }
