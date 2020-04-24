@@ -1,137 +1,73 @@
-hInput = Kc(vk_right) - Kc(vk_left);
-vInput = Kc(vk_down) - Kc(vk_up);
-input_run = Kc(vk_shift);
-input_Interact = Kcp(ord("E"));
-//input_Status = Kcp(ord(vk_enter));
 
-// Reset Movement Variables
+// GET HORIZONTAL AND VERTICAL MOVEMENT
+hInput = keyboard_check(vk_right) - keyboard_check(vk_left);
+vInput = keyboard_check(vk_down) - keyboard_check(vk_up);
+shiftInput = keyboard_check(vk_shift);
+
+
+if (shiftInput) {
+	spd = u_spd;
+} else {
+	spd = 4.5;
+	
+}
+
 moveX = 0;
 moveY = 0;
 
-// Alter Speed
-if (input_run) {
-	spd = r_spd;
-	image_speed = .5;
-} else {
-	spd = 3;
-	image_speed = .5;
-}
-
-
-//Intended Movement
-if(hInput != 0 or vInput != 0) {
-	dir = point_direction(0,0,hInput,vInput);
-
+// MOVE CHARACTER ON KEY PRESS
+if (hInput != 0 or vInput != 0) {
+	dir = point_direction(0, 0, hInput, vInput)
 	moveX = lengthdir_x(spd, dir);
 	moveY = lengthdir_y(spd, dir);
 
 
 
-if (!can_move) exit;
+// COLLISION CHECK
 
-//------------Collisions
-
-//Horizontal Collision
-if(moveX != 0) {
-	if (place_meeting(x+moveX, y, Solid_Obj)) {
-		repeat (abs (moveX)) {
-			if (!place_meeting(x+sign(moveX), y, Solid_Obj)) {
-				x += sign(moveX);
-			} else {
-				break;
-			}
-		}
-		moveX = 0
-	}
-}
-
-//Vertical Collision
-if(moveY != 0) {
-	if (place_meeting(x, y+moveY, Solid_Obj)) {
-		repeat (abs (moveY)) {
-			if (!place_meeting(x, y+sign(moveY), Solid_Obj)) {
-				y += sign(moveY);
-			} else {
-				break;
-			}
-		}
-		
-		moveY = 0
-	}
-}
-
-
-/*
-// Check For Battle Encounter
-var rng = irandom(steps)
-if (rng == steps) && (steps <= 850) {
-		room_goto(Forest_Battle_Rm_1);
-	} else {
-	 steps -= 1;
-	}
-
-
-*/
-
-
-// Room Transitions
-var inst = instance_place(x,y, Transition_Obj);
-if (inst != noone) {
-	with (Game_Obj) {
-		if (!doTransition) {
-			spawnRoom = inst.targetRoom;
-			spawnX = inst.targetX;
-			spawnY = inst.targetY;
-			doTransition = true;
-		}
-	}
-}
-
-// TextBox
-if(input_Interact){
-	if (active_textbox == noone) {
-		var inst = collision_rectangle(x-radius, y-radius, x+radius, y+radius, Sign_Obj, false, false);
+	//HORIZONTAL
+	var collisionH = instance_place(x + moveX, y, Solid_Obj)
+	show_debug_message(collisionH)
+	if (collisionH != noone and collisionH.collidable) {
+		show_debug_message(collisionH)
+		repeat(abs(moveX)) {
+			if (!place_meeting(x+sign(moveX), y, Solid_Obj)) { x += sign(moveX); } 
+			else { break;}}	moveX = 0; }
 	
-			if(inst != noone) {
-				with(inst) {
-				var tbox = Textbox(text, speakers);
-				can_move = false;
-				moveX = 0; moveY = 0;
-			}
-			active_textbox = tbox;
-		}
-	} else {
-		if (!instance_exists(active_textbox)){
-			active_textbox = noone;
-		}
-	}
-}
+	
+	//VERTICAL
+	var collisionV = instance_place(x , y + moveY, Solid_Obj)
+	if (collisionV != noone and collisionV.collidable) {
+		repeat(abs(moveY)) {
+			if (!place_meeting(x, y +sign(moveX), Solid_Obj)) { y += sign(moveY); } 
+			else { break;}}	moveY = 0; }
 
 
-// Apply Movement
+	// APPLY MOVEMENT
 	x += moveX;
 	y += moveY;
 	
-	//Set Sprite
-	if (room != Forest_Battle_Rm_1 && can_move) {
-		switch(dir) {
-			case 0: sprite_index = Pahn_Walk_Right_Spr; break;
-			case 90: sprite_index = Pahn_Walk_Back_Spr; break;
-			case 270: sprite_index = Pahn_Walk_Front_Spr; break;
-			case 180: sprite_index = Pahn_Walk_Left_Spr; break;
-		}
+	// SET SPRITE ACCORDING TO DIRECTION
+	switch(dir) {
+		case 0:		pahnRight = true; pahnBack = false;  pahnLeft = false; pahnFront = false; break;
+		case 90:	pahnBack = true; pahnRight = false; pahnLeft = false; pahnFront = false;  break;
+		case 180:	pahnLeft = true; pahnBack = false;  pahnRight = false;  pahnFront = false; break;
+		case 270:	pahnFront = true; pahnRight = false; pahnBack = false;  pahnLeft = false; break;
 	}
+	
+} else {
+	
+	// SET SPRITE TO FIRST INDEX OF IDLE EACH DIRECTION
+	if (sprite_index = PahnW_Front and moveX == 0 and moveY == 0) {
+		sprite_index = PahnIID_Front;
+	} else if (sprite_index = PahnW_Right and moveX == 0 and moveY == 0) {
+		sprite_index = PahnID_Right;
+	} else if (sprite_index = PahnW_Left and moveX == 0 and moveY == 0) {
+		sprite_index = PahnID_Left;
+	} else if (sprite_index = PahnW_Back and moveX == 0 and moveY == 0) {
+		sprite_index = PahnID_Back;
 	} else {
-			image_index = 0;
+		image_index = 0;
 	}
 
-
-
-
-
-
-
-
-
-
-
+}
