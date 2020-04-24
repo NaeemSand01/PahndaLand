@@ -1,17 +1,13 @@
-//Character Variables
+/// @description Insert description here
+// You can write your code in this editor
+//event_inherited()
+dayTime = true;
+nightTime = false;
 
-spd = 4;
-image_speed = .5;
-r_spd = 7
-facing = 0;
-radius = 160;
+//door_open_sound = Door_Open_1;
 
-portrait_index = 1;
-voice = Text_Sound_1;
-name = "Pahn";
-active_textbox = noone;
-can_move = true;
+doorOpen = false;
 
-steps = 1000;
+drFrame = 0
 
-
+image_speed = .1
